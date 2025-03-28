@@ -31,6 +31,24 @@ public class FornecedorService {
     }
 
     @Transactional
+    public Fornecedor atualizar(Fornecedor fornecedor) {
+        Fornecedor fornecedorExistente = buscarPorId(fornecedor.getId());
+        
+        // Verifica se o CNPJ está sendo alterado e se já existe
+        if (!fornecedorExistente.getCnpj().equals(fornecedor.getCnpj()) && 
+            repository.existsByCnpj(fornecedor.getCnpj())) {
+            throw new IllegalArgumentException("Já existe um fornecedor cadastrado com este CNPJ");
+        }
+
+        fornecedorExistente.setNomeEmpresa(fornecedor.getNomeEmpresa());
+        fornecedorExistente.setCnpj(fornecedor.getCnpj());
+        fornecedorExistente.setTelefone(fornecedor.getTelefone());
+        fornecedorExistente.setTiposMaterial(fornecedor.getTiposMaterial());
+
+        return repository.save(fornecedorExistente);
+    }
+
+    @Transactional
     public void deletar(Long id) {
         if (!repository.existsById(id)) {
             throw new IllegalArgumentException("Fornecedor não encontrado");

@@ -29,6 +29,12 @@ public class FornecedorController {
         return ResponseEntity.ok(service.listarTodos());
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Fornecedor> atualizar(@PathVariable Long id, @RequestBody Fornecedor fornecedor) {
+        fornecedor.setId(id);
+        return ResponseEntity.ok(service.atualizar(fornecedor));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         service.deletar(id);

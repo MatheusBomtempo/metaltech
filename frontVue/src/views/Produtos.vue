@@ -1,5 +1,13 @@
 <template>
   <div>
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      :timeout="3000"
+    >
+      {{ snackbar.text }}
+    </v-snackbar>
+
     <v-row>
       <v-col cols="12">
         <v-card>
@@ -127,6 +135,12 @@ const defaultItem = ref<Produto>({
   categoria: ''
 });
 
+const snackbar = ref({
+  show: false,
+  text: '',
+  color: 'error'
+});
+
 const headers = [
   { title: 'Código', key: 'codigo' },
   { title: 'Nome', key: 'nome' },
@@ -142,57 +156,123 @@ const formTitle = computed(() => {
 
 async function fetchProdutos() {
   try {
+    console.log('Iniciando busca de produtos...');
     const response = await ProdutoService.listar();
+    console.log('Produtos encontrados:', response.data);
     produtos.value = response.data;
+    console.log('Lista de produtos atualizada com sucesso');
   } catch (error) {
     console.error('Erro ao buscar produtos:', error);
+    showSnackbar('Erro ao carregar lista de produtos', 'error');
   }
 }
 
 function editItem(item: Produto) {
+  console.log('Iniciando edição do produto:', item);
   editedIndex.value = produtos.value.indexOf(item);
   editedItem.value = Object.assign({}, item);
   dialog.value = true;
+  console.log('Produto carregado para edição:', editedItem.value);
 }
 
 async function deleteItem(item: Produto) {
+  console.log('Iniciando processo de exclusão do produto:', item);
   const index = produtos.value.indexOf(item);
+  
   if (confirm('Tem certeza que deseja excluir este produto?')) {
     try {
       if (item.id) {
+        console.log('Enviando requisição de exclusão para o produto ID:', item.id);
         await ProdutoService.excluir(item.id);
+        console.log('Produto excluído com sucesso no backend');
+        
+        // Verifica se o produto ainda existe na lista antes de tentar removê-lo
+        if (index !== -1) {
+          console.log('Removendo produto da lista local, índice:', index);
+          produtos.value.splice(index, 1);
+          showSnackbar('Produto excluído com sucesso!', 'success');
+        } else {
+          console.warn('Produto não encontrado na lista local para remoção');
+          showSnackbar('Produto não encontrado na lista', 'warning');
+        }
+      } else {
+        console.warn('Tentativa de excluir produto sem ID');
+        showSnackbar('Produto inválido para exclusão', 'error');
       }
-      produtos.value.splice(index, 1);
-    } catch (error) {
-      console.error('Erro ao excluir produto:', error);
+    } catch (error: any) {
+      console.error('Erro detalhado ao excluir produto:', {
+        mensagem: error.message,
+        resposta: error.response?.data,
+        status: error.response?.status
+      });
+      showSnackbar(error.response?.data?.message || 'Erro ao excluir produto', 'error');
     }
+  } else {
+    console.log('Operação de exclusão cancelada pelo usuário');
   }
 }
 
 function close() {
+  console.log('Fechando diálogo de edição');
   dialog.value = false;
   editedItem.value = Object.assign({}, defaultItem.value);
   editedIndex.value = -1;
+  console.log('Estado do formulário resetado');
+}
+
+function showSnackbar(text: string, color: string = 'error') {
+  console.log('Exibindo notificação:', { text, color });
+  snackbar.value = {
+    show: true,
+    text,
+    color
+  };
 }
 
 async function save() {
+  console.log('Iniciando processo de salvamento:', editedItem.value);
+  
   try {
     if (editedIndex.value > -1) {
+      console.log('Modo de edição - Atualizando produto existente');
       if (editedItem.value.id) {
+        console.log('Enviando atualização para o produto ID:', editedItem.value.id);
         await ProdutoService.atualizar(editedItem.value.id, editedItem.value);
+        console.log('Produto atualizado com sucesso no backend');
+        
+        // Verifica se o produto ainda existe na lista antes de atualizar
+        if (editedIndex.value < produtos.value.length) {
+          console.log('Atualizando produto na lista local, índice:', editedIndex.value);
+          Object.assign(produtos.value[editedIndex.value], editedItem.value);
+          showSnackbar('Produto atualizado com sucesso!', 'success');
+        } else {
+          console.warn('Produto não encontrado na lista local para atualização');
+          showSnackbar('Produto não encontrado na lista', 'warning');
+        }
+      } else {
+        console.warn('Tentativa de atualizar produto sem ID');
+        showSnackbar('Produto inválido para atualização', 'error');
       }
-      Object.assign(produtos.value[editedIndex.value], editedItem.value);
     } else {
+      console.log('Modo de criação - Criando novo produto');
       const response = await ProdutoService.criar(editedItem.value);
+      console.log('Novo produto criado:', response.data);
       produtos.value.push(response.data);
+      showSnackbar('Produto criado com sucesso!', 'success');
     }
     close();
-  } catch (error) {
-    console.error('Erro ao salvar produto:', error);
+  } catch (error: any) {
+    console.error('Erro detalhado ao salvar produto:', {
+      mensagem: error.message,
+      resposta: error.response?.data,
+      status: error.response?.status
+    });
+    showSnackbar(error.response?.data?.message || 'Erro ao salvar produto', 'error');
   }
 }
 
 onMounted(() => {
+  console.log('Componente Produtos montado, iniciando carregamento...');
   fetchProdutos();
 });
 </script> 

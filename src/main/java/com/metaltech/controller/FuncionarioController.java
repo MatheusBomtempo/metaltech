@@ -20,8 +20,19 @@ public class FuncionarioController extends PessoaController<Funcionario, Funcion
         return funcionarioService;
     }
 
+    @GetMapping
+    public ResponseEntity<List<Funcionario>> listarTodos() {
+        return ResponseEntity.ok(funcionarioService.listarTodos());
+    }
+
     @GetMapping("/cargo/{cargo}")
     public ResponseEntity<List<Funcionario>> buscarPorCargo(@PathVariable Cargo cargo) {
         return ResponseEntity.ok(funcionarioService.buscarPorCargo(cargo));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Funcionario> atualizar(@PathVariable Long id, @RequestBody Funcionario funcionario) {
+        funcionario.setId(id);
+        return ResponseEntity.ok(funcionarioService.atualizar(funcionario));
     }
 } 
