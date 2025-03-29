@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Produto, Cliente, Funcionario, Fornecedor, Venda } from '../types';
+import type { Produto, Cliente, Funcionario, Fornecedor, Venda, ItemVenda } from '../types';
 
 const api = axios.create({
   baseURL: 'http://localhost:8081/api',
@@ -11,20 +11,15 @@ const api = axios.create({
 
 // Interceptor para tratamento de erros
 api.interceptors.response.use(
-  response => {
-    console.log('Resposta da API:', {
-      url: response.config.url,
-      status: response.status,
-      data: response.data
-    });
-    return response;
-  },
+  response => response,
   error => {
     console.error('Erro na requisição:', {
       url: error.config?.url,
+      method: error.config?.method,
       status: error.response?.status,
       data: error.response?.data,
-      message: error.message
+      message: error.message,
+      stack: error.stack
     });
     return Promise.reject(error);
   }
@@ -70,7 +65,7 @@ export const FornecedorService = {
 export const VendaService = {
   listar: async () => {
     try {
-      const response = await api.get<Venda[]>('/vendas');
+      const response = await api.get('/vendas');
       return response.data;
     } catch (error) {
       console.error('Erro ao listar vendas:', error);
@@ -78,18 +73,42 @@ export const VendaService = {
     }
   },
   buscarPorId: async (id: number) => {
-    const response = await api.get<Venda>(`/vendas/${id}`);
-    return response.data;
+    try {
+      const response = await api.get(`/vendas/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Erro ao buscar venda ${id}:`, error);
+      throw error;
+    }
   },
   criar: async (venda: Venda) => {
-    const response = await api.post<Venda>('/vendas', venda);
-    return response.data;
+    try {
+      console.log('Enviando venda para criação:', venda);
+      const response = await api.post('/vendas', venda);
+      console.log('Resposta da criação:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao criar venda:', error);
+      throw error;
+    }
   },
   atualizar: async (id: number, venda: Venda) => {
-    const response = await api.put<Venda>(`/vendas/${id}`, venda);
-    return response.data;
+    try {
+      console.log('Enviando venda para atualização:', venda);
+      const response = await api.put(`/vendas/${id}`, venda);
+      console.log('Resposta da atualização:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`Erro ao atualizar venda ${id}:`, error);
+      throw error;
+    }
   },
   excluir: async (id: number) => {
-    await api.delete(`/vendas/${id}`);
+    try {
+      await api.delete(`/vendas/${id}`);
+    } catch (error) {
+      console.error(`Erro ao excluir venda ${id}:`, error);
+      throw error;
+    }
   }
 }; 
