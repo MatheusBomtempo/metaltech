@@ -47,8 +47,34 @@ export const ClienteService = {
 export const FuncionarioService = {
   listar: () => api.get<Funcionario[]>('/funcionarios'),
   buscarPorId: (id: number) => api.get<Funcionario>(`/funcionarios/${id}`),
-  criar: (funcionario: Funcionario) => api.post<Funcionario>('/funcionarios', funcionario),
-  atualizar: (id: number, funcionario: Funcionario) => api.put<Funcionario>(`/funcionarios/${id}`, funcionario),
+  async criar(funcionario: Funcionario) {
+    try {
+      console.log('Enviando dados do funcionário:', funcionario);
+      const response = await api.post('/funcionarios', {
+        ...funcionario,
+        salario: Number(funcionario.salario),
+        dataContratacao: funcionario.dataContratacao || new Date().toISOString().split('T')[0]
+      });
+      return response;
+    } catch (error) {
+      console.error('Erro ao criar funcionário:', error);
+      throw error;
+    }
+  },
+  async atualizar(id: number, funcionario: Funcionario) {
+    try {
+      console.log('Enviando dados do funcionário para atualização:', funcionario);
+      const response = await api.put(`/funcionarios/${id}`, {
+        ...funcionario,
+        salario: Number(funcionario.salario),
+        dataContratacao: funcionario.dataContratacao || new Date().toISOString().split('T')[0]
+      });
+      return response;
+    } catch (error) {
+      console.error('Erro ao atualizar funcionário:', error);
+      throw error;
+    }
+  },
   excluir: (id: number) => api.delete(`/funcionarios/${id}`)
 };
 

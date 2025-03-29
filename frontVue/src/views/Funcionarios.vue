@@ -74,10 +74,11 @@
                 ></v-text-field>
               </v-col>
               <v-col cols="12">
-                <v-text-field
+                <v-select
                   v-model="editedItem.cargo"
+                  :items="['GERENTE', 'REPRESENTANTE_VENDAS', 'SOLDADOR', 'OPERADOR_MAQUINA', 'AUXILIAR_ADMINISTRATIVO']"
                   label="Cargo"
-                ></v-text-field>
+                ></v-select>
               </v-col>
               <v-col cols="12">
                 <v-text-field
@@ -120,18 +121,18 @@ const editedItem = ref<Funcionario>({
   nome: '',
   documentoFiscal: '',
   telefone: '',
-  cargo: '',
+  cargo: 'AUXILIAR_ADMINISTRATIVO',
   salario: 0,
-  dataContratacao: '',
+  dataContratacao: new Date().toISOString().split('T')[0],
   dataCadastro: ''
 });
 const defaultItem = ref<Funcionario>({
   nome: '',
   documentoFiscal: '',
   telefone: '',
-  cargo: '',
+  cargo: 'AUXILIAR_ADMINISTRATIVO',
   salario: 0,
-  dataContratacao: '',
+  dataContratacao: new Date().toISOString().split('T')[0],
   dataCadastro: ''
 });
 
@@ -187,18 +188,45 @@ function close() {
 
 async function save() {
   try {
+    // Validações básicas
+    if (!editedItem.value.nome?.trim()) {
+      alert('Nome é obrigatório');
+      return;
+    }
+
+    if (!editedItem.value.documentoFiscal?.trim()) {
+      alert('Documento fiscal é obrigatório');
+      return;
+    }
+
+    if (!editedItem.value.cargo) {
+      alert('Cargo é obrigatório');
+      return;
+    }
+
+    if (!editedItem.value.salario || editedItem.value.salario <= 0) {
+      alert('Salário deve ser maior que zero');
+      return;
+    }
+
     if (editedIndex.value > -1) {
       if (editedItem.value.id) {
-        await FuncionarioService.atualizar(editedItem.value.id, editedItem.value);
+        console.log('Atualizando funcionário:', editedItem.value);
+        const response = await FuncionarioService.atualizar(editedItem.value.id, editedItem.value);
+        Object.assign(funcionarios.value[editedIndex.value], response.data);
+        alert('Funcionário atualizado com sucesso');
       }
-      Object.assign(funcionarios.value[editedIndex.value], editedItem.value);
     } else {
+      console.log('Criando novo funcionário:', editedItem.value);
       const response = await FuncionarioService.criar(editedItem.value);
       funcionarios.value.push(response.data);
+      alert('Funcionário criado com sucesso');
     }
     close();
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro ao salvar funcionário:', error);
+    const errorMessage = error.response?.data?.message || 'Erro ao salvar funcionário';
+    alert(errorMessage);
   }
 }
 
