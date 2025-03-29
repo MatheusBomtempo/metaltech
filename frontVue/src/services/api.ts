@@ -69,18 +69,27 @@ export const FornecedorService = {
 // Serviço de Vendas
 export const VendaService = {
   listar: async () => {
-    console.log('Iniciando requisição de listagem de vendas');
     try {
       const response = await api.get<Venda[]>('/vendas');
-      console.log('Resposta da listagem de vendas:', response.data);
-      return response;
+      return response.data;
     } catch (error) {
       console.error('Erro ao listar vendas:', error);
       throw error;
     }
   },
-  buscarPorId: (id: number) => api.get<Venda>(`/vendas/${id}`),
-  criar: (venda: Venda) => api.post<Venda>('/vendas', venda),
-  atualizar: (id: number, venda: Venda) => api.put<Venda>(`/vendas/${id}`, venda),
-  excluir: (id: number) => api.delete(`/vendas/${id}`)
+  buscarPorId: async (id: number) => {
+    const response = await api.get<Venda>(`/vendas/${id}`);
+    return response.data;
+  },
+  criar: async (venda: Venda) => {
+    const response = await api.post<Venda>('/vendas', venda);
+    return response.data;
+  },
+  atualizar: async (id: number, venda: Venda) => {
+    const response = await api.put<Venda>(`/vendas/${id}`, venda);
+    return response.data;
+  },
+  excluir: async (id: number) => {
+    await api.delete(`/vendas/${id}`);
+  }
 }; 

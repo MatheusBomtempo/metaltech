@@ -37,7 +37,7 @@ export interface Fornecedor {
 
 export interface ItemVenda {
   id?: number;
-  produto: Produto;
+  produto: Produto | null;
   quantidade: number;
   precoUnitario: number;
   subtotal: number;
@@ -45,8 +45,8 @@ export interface ItemVenda {
 
 export interface Venda {
   id?: number;
-  cliente: Cliente;
-  funcionario: Funcionario;
+  cliente: Cliente | null;
+  funcionario: Funcionario | null;
   dataVenda: string;
   valorTotal: number;
   formaPagamento: 'DINHEIRO' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'PIX';

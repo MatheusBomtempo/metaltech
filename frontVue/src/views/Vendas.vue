@@ -297,61 +297,33 @@ const loading = ref(false);
 
 async function fetchVendas() {
   loading.value = true;
-  console.log('Iniciando busca de vendas...');
   try {
     const response = await VendaService.listar();
-    console.log('Resposta completa da API:', response);
-    console.log('Dados brutos recebidos:', response.data);
     
-    if (!response.data) {
-      console.error('Resposta da API não contém dados');
+    if (!response) {
       showSnackbar('Erro: Dados não recebidos da API', 'error');
       vendas.value = [];
       return;
     }
 
-    // Verificar se os dados estão no formato esperado
-    if (typeof response.data === 'string') {
-      console.error('Dados recebidos como string:', response.data);
-      try {
-        response.data = JSON.parse(response.data);
-      } catch (e) {
-        console.error('Erro ao fazer parse dos dados:', e);
-        showSnackbar('Erro: Formato de dados inválido', 'error');
-        vendas.value = [];
-        return;
-      }
-    }
+    // Processar os dados recebidos
+    const dados = Array.isArray(response) ? response : [];
+    
+    vendas.value = dados.map(venda => ({
+      ...venda,
+      cliente: venda.cliente || null,
+      funcionario: venda.funcionario || null,
+      dataVenda: venda.dataVenda || new Date().toISOString(),
+      valorTotal: Number(venda.valorTotal) || 0,
+      formaPagamento: venda.formaPagamento || 'DINHEIRO',
+      itens: Array.isArray(venda.itens) ? venda.itens : []
+    }));
 
-    const vendasProcessadas = Array.isArray(response.data) 
-      ? response.data.map(venda => {
-          console.log('Processando venda individual:', venda);
-          return {
-            ...venda,
-            cliente: venda.cliente || null,
-            funcionario: venda.funcionario || null,
-            dataVenda: venda.dataVenda || '',
-            valorTotal: Number(venda.valorTotal) || 0,
-            formaPagamento: venda.formaPagamento || 'DINHEIRO',
-            itens: Array.isArray(venda.itens) ? venda.itens : []
-          };
-        })
-      : [];
-
-    console.log('Vendas processadas para exibição:', vendasProcessadas);
-    vendas.value = vendasProcessadas;
-
-    if (vendasProcessadas.length === 0) {
-      console.log('Nenhuma venda encontrada');
+    if (vendas.value.length === 0) {
       showSnackbar('Nenhuma venda encontrada', 'info');
     }
   } catch (error: any) {
-    console.error('Erro detalhado ao buscar vendas:', {
-      mensagem: error.message,
-      resposta: error.response?.data,
-      status: error.response?.status,
-      stack: error.stack
-    });
+    console.error('Erro ao buscar vendas:', error);
     showSnackbar('Erro ao buscar vendas', 'error');
     vendas.value = [];
   } finally {
