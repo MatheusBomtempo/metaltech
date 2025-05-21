@@ -1,10 +1,9 @@
 package com.metaltech.model;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Data
 @Entity
